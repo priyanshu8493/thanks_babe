@@ -13,20 +13,11 @@ html {
 
 body {
   background:
-    radial-gradient(ellipse at 50% 0%, rgba(40, 20, 50, 0.6) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 80%, rgba(20, 10, 50, 0.4) 0%, transparent 50%),
-    linear-gradient(180deg, #0a0a1a 0%, #0d0d1f 50%, #050508 100%);
+    radial-gradient(ellipse at 50% 0%, rgba(50, 20, 60, 0.5) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 80%, rgba(25, 10, 55, 0.3) 0%, transparent 50%),
+    radial-gradient(ellipse at 20% 50%, rgba(40, 15, 35, 0.2) 0%, transparent 40%),
+    linear-gradient(180deg, #08080f 0%, #0a0a18 30%, #0d0a1a 60%, #050508 100%);
   background-attachment: fixed;
   color: var(--color-foreground);
   min-height: 100vh;
-  animation: bgShift 30s ease-in-out infinite alternate;
-}
-
-@keyframes bgShift {
-  0% {
-    background-position: 0% 0%;
-  }
-  100% {
-    background-position: 100% 100%;
-  }
 }
