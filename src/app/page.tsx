@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState, useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const STAGGER = 0.7;
 
@@ -22,7 +23,7 @@ const particles = Array.from({ length: 50 }, (_, i) => {
 
 function Particles() {
   return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden">
+    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
       {particles.map((p) => (
         <motion.div
           key={p.id}
@@ -73,114 +74,214 @@ function Divider({ className = "" }: { className?: string }) {
 }
 
 export default function Home() {
+  const [hasStarted, setHasStarted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+
+  const handleStart = useCallback(() => {
+    setHasStarted(true);
+    if (audioRef.current) {
+      audioRef.current.volume = 0.2;
+      audioRef.current.play().catch(() => {});
+      setIsMusicPlaying(true);
+    }
+  }, []);
+
+  const toggleMusic = useCallback(() => {
+    if (!audioRef.current) return;
+    if (isMusicPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play().catch(() => {});
+    }
+    setIsMusicPlaying(!isMusicPlaying);
+  }, [isMusicPlaying]);
+
   return (
-    <main className="relative min-h-screen w-full flex flex-col items-center justify-center px-6 py-20 sm:px-12 lg:px-24 overflow-hidden">
+    <main className="relative min-h-screen w-full overflow-hidden">
       <Particles />
 
       <div
-        className="fixed inset-0 pointer-events-none"
+        className="fixed inset-0 pointer-events-none z-0"
         style={{
           background:
             "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.6) 100%)",
         }}
       />
-
       <div
-        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full pointer-events-none sm:w-[800px] sm:h-[800px]"
+        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full pointer-events-none z-0 sm:w-[800px] sm:h-[800px]"
         style={{
           background:
             "radial-gradient(circle, rgba(60, 30, 50, 0.12) 0%, transparent 65%)",
         }}
       />
 
-      <div className="relative z-10 max-w-2xl w-full text-center">
-        {paragraphs.map((text, i) => (
+      <audio ref={audioRef} src="/music/a-thousand-years.mp3" loop preload="auto" />
+
+      <AnimatePresence mode="wait">
+        {!hasStarted ? (
           <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 40, filter: "blur(6px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            transition={{
-              duration: 1.6,
-              delay: 0.2 + i * STAGGER,
-              ease: [0.22, 0.08, 0.15, 1],
-            }}
+            key="intro"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 1.06 }}
+            transition={{ duration: 1.2, ease: [0.22, 0.08, 0.15, 1] }}
+            className="fixed inset-0 z-20 flex flex-col items-center justify-center cursor-pointer select-none"
+            onClick={handleStart}
+            onKeyDown={(e) => e.key === "Enter" && handleStart()}
+            tabIndex={0}
+            role="button"
+            aria-label="Open the letter"
           >
-            {i > 0 && <Divider className="mb-10 sm:mb-14" />}
-            <p className="font-serif text-lg leading-relaxed sm:text-xl md:text-2xl text-[#f5e6c8] tracking-wide">
-              {text}
-            </p>
-          </motion.div>
-        ))}
-
-        <motion.div
-          initial={{ opacity: 0, y: 40, filter: "blur(6px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          transition={{
-            duration: 1.6,
-            delay: 0.2 + paragraphs.length * STAGGER,
-            ease: [0.22, 0.08, 0.15, 1],
-          }}
-        >
-          <Divider className="mb-10 mt-14 sm:mb-14 sm:mt-20" />
-
-          <p className="font-serif text-xl leading-relaxed sm:text-2xl md:text-3xl text-[#f5e6c8]">
-            <span>Thank you, </span>
-            <motion.span
-              className="inline-block"
-              initial={{ opacity: 0, y: 15, filter: "blur(8px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              transition={{
-                duration: 1.4,
-                delay: 0.2 + paragraphs.length * STAGGER + 1.2,
-                ease: [0.22, 0.08, 0.15, 1],
-              }}
-              style={{
-                textShadow: "0 0 24px rgba(245, 230, 200, 0.25)",
-              }}
-            >
-              Jiniya.
-            </motion.span>
-          </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 40, filter: "blur(6px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          transition={{
-            duration: 1.6,
-            delay: 0.2 + (paragraphs.length + 1) * STAGGER,
-            ease: [0.22, 0.08, 0.15, 1],
-          }}
-        >
-          <Divider className="mb-10 mt-14 sm:mb-12 sm:mt-20" />
-
-          <p className="font-serif text-2xl leading-relaxed sm:text-3xl md:text-4xl text-[#f5e6c8]">
-            I love you.{" "}
-            <motion.span
-              className="inline-block"
+            <motion.div
+              className="mb-8"
               animate={{
-                textShadow: [
-                  "0 0 4px rgba(245, 230, 200, 0.2)",
-                  "0 0 14px rgba(245, 230, 200, 0.4)",
-                  "0 0 28px rgba(245, 230, 200, 0.6)",
-                  "0 0 48px rgba(245, 230, 200, 0.8)",
-                  "0 0 28px rgba(245, 230, 200, 0.6)",
-                  "0 0 14px rgba(245, 230, 200, 0.4)",
-                  "0 0 4px rgba(245, 230, 200, 0.2)",
-                ],
-                scale: [1, 1.1, 1.04, 1.15, 1.04, 1.1, 1],
+                scale: [1, 1.12, 1],
+                opacity: [0.3, 0.6, 0.3],
               }}
               transition={{
-                duration: 3,
+                duration: 2.5,
                 repeat: Infinity,
                 ease: "easeInOut",
               }}
             >
-              ♥
-            </motion.span>
-          </p>
-        </motion.div>
-      </div>
+              <span className="text-3xl sm:text-4xl text-[#f5e6c8]">♥</span>
+            </motion.div>
+
+            <motion.h1
+              className="font-serif text-4xl sm:text-5xl md:text-6xl text-[#f5e6c8] tracking-wide"
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1.5, ease: [0.22, 0.08, 0.15, 1] }}
+            >
+              For Jiniya
+            </motion.h1>
+
+            <motion.p
+              className="mt-8 font-sans text-xs sm:text-sm text-[#f5e6c8]/40 tracking-[0.25em] uppercase"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 0.5, 0] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+            >
+              Tap anywhere to open
+            </motion.p>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="letter"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1.2, delay: 0.2, ease: [0.22, 0.08, 0.15, 1] }}
+            className="relative z-10 min-h-screen w-full flex flex-col items-center justify-center px-6 py-20 sm:px-12 lg:px-24"
+          >
+            <div className="max-w-2xl w-full text-center">
+              {paragraphs.map((text, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 40, filter: "blur(6px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  transition={{
+                    duration: 1.6,
+                    delay: 0.2 + i * STAGGER,
+                    ease: [0.22, 0.08, 0.15, 1],
+                  }}
+                >
+                  {i > 0 && <Divider className="mb-10 sm:mb-14" />}
+                  <p className="font-serif text-lg leading-relaxed sm:text-xl md:text-2xl text-[#f5e6c8] tracking-wide">
+                    {text}
+                  </p>
+                </motion.div>
+              ))}
+
+              <motion.div
+                initial={{ opacity: 0, y: 40, filter: "blur(6px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                transition={{
+                  duration: 1.6,
+                  delay: 0.2 + paragraphs.length * STAGGER,
+                  ease: [0.22, 0.08, 0.15, 1],
+                }}
+              >
+                <Divider className="mb-10 mt-14 sm:mb-14 sm:mt-20" />
+
+                <p className="font-serif text-xl leading-relaxed sm:text-2xl md:text-3xl text-[#f5e6c8]">
+                  <span>Thank you, </span>
+                  <motion.span
+                    className="inline-block"
+                    initial={{ opacity: 0, y: 15, filter: "blur(8px)" }}
+                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                    transition={{
+                      duration: 1.4,
+                      delay: 0.2 + paragraphs.length * STAGGER + 1.2,
+                      ease: [0.22, 0.08, 0.15, 1],
+                    }}
+                    style={{
+                      textShadow: "0 0 24px rgba(245, 230, 200, 0.25)",
+                    }}
+                  >
+                    Jiniya.
+                  </motion.span>
+                </p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 40, filter: "blur(6px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                transition={{
+                  duration: 1.6,
+                  delay: 0.2 + (paragraphs.length + 1) * STAGGER,
+                  ease: [0.22, 0.08, 0.15, 1],
+                }}
+              >
+                <Divider className="mb-10 mt-14 sm:mb-12 sm:mt-20" />
+
+                <p className="font-serif text-2xl leading-relaxed sm:text-3xl md:text-4xl text-[#f5e6c8]">
+                  I love you.{" "}
+                  <motion.span
+                    className="inline-block"
+                    animate={{
+                      textShadow: [
+                        "0 0 4px rgba(245, 230, 200, 0.2)",
+                        "0 0 14px rgba(245, 230, 200, 0.4)",
+                        "0 0 28px rgba(245, 230, 200, 0.6)",
+                        "0 0 48px rgba(245, 230, 200, 0.8)",
+                        "0 0 28px rgba(245, 230, 200, 0.6)",
+                        "0 0 14px rgba(245, 230, 200, 0.4)",
+                        "0 0 4px rgba(245, 230, 200, 0.2)",
+                      ],
+                      scale: [1, 1.1, 1.04, 1.15, 1.04, 1.1, 1],
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  >
+                    ♥
+                  </motion.span>
+                </p>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {hasStarted && (
+          <motion.button
+            key="music-toggle"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+            transition={{ delay: 1.5, duration: 0.8 }}
+            onClick={toggleMusic}
+            className="fixed bottom-6 right-6 z-30 w-11 h-11 flex items-center justify-center rounded-full bg-[#f5e6c8]/8 backdrop-blur-md border border-[#f5e6c8]/15 text-[#f5e6c8]/60 hover:text-[#f5e6c8]/90 hover:bg-[#f5e6c8]/15 transition-all duration-500 text-xl"
+            aria-label={isMusicPlaying ? "Pause music" : "Play music"}
+          >
+            {isMusicPlaying ? "♪" : "♫"}
+          </motion.button>
+        )}
+      </AnimatePresence>
     </main>
   );
 }
